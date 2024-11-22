@@ -5,6 +5,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.geometry.Pos;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.KeyCode;
@@ -23,8 +26,11 @@ public class FifteenPuzzle extends Application {
     Rectangle[][] rectangles = new Rectangle[4][4];
     Label[][] labels = new Label[4][4];
     long startMillis = 0;
-    Label timeLabel = new Label("Last time: ");
+    Label timeLabel = new Label("Last time:");
+    Label movesLabel = new Label("Moves:");
     Button startButton = new Button("Reset");
+    GameState gameState = GameState.WAITING;
+    int numMoves = 0;
 
     public static void main(String[] args) {
         launch(args);
@@ -36,11 +42,14 @@ public class FifteenPuzzle extends Application {
         resetGame();
 
         /* Initialize labels */
-        timeLabel.setFont(new Font("Comic Sans MS", 30));
+        timeLabel.setFont(new Font("Comic Sans MS", 20));
         timeLabel.setTextFill(Color.WHITE);
+        movesLabel.setFont(new Font("Comic Sans MS", 20));
+        movesLabel.setTextFill(Color.WHITE);
         startButton.setFont(new Font("Comic Sans MS", 30));
         startButton.setTextFill(PURPLE);
-        startButton.setStyle("-fx-background-color: #6edcdc; -fx-border-color: ffffff; -fx-border-width: 3");
+        startButton.setFocusTraversable(false);
+        startButton.setStyle("-fx-background-color: #6edcdc; -fx-border-color: ffffff; -fx-border-width: 3; -fx-background-radius: 10; -fx-border-radius: 10");
         startButton.setOnAction(e -> {
                 resetGame();
                 updateGridPane();
@@ -70,12 +79,22 @@ public class FifteenPuzzle extends Application {
                 gridPane.add(stack, c, r);
             }
         }
+        vbox.setMaxWidth(gridPane.getWidth() - 100);
         gridPane.setAlignment(Pos.CENTER);
         Rectangle background = new Rectangle(0, 0, 10000, 10000);
         background.setFill(PURPLE);
-        //vbox.getChildren().add(startButton);
+        vbox.getChildren().add(startButton);
         vbox.getChildren().add(gridPane);
-        vbox.getChildren().add(timeLabel);
+
+        HBox labelBox = new HBox();
+        labelBox.setAlignment(Pos.CENTER);
+        labelBox.getChildren().add(timeLabel);
+        Region spacing = new Region();
+        labelBox.getChildren().add(spacing);
+        labelBox.getChildren().add(movesLabel);
+        labelBox.setHgrow(spacing, Priority.ALWAYS);
+        
+        vbox.getChildren().add(labelBox);
         vbox.setAlignment(Pos.CENTER);
         stackPane.getChildren().add(background);
         stackPane.getChildren().add(vbox);
@@ -83,6 +102,13 @@ public class FifteenPuzzle extends Application {
         /* Add key handlers */
         Scene scene = new Scene(stackPane, 800, 800);
         scene.setOnKeyPressed(e -> {
+                if (gameState == GameState.WAITING) {
+                    startTimer();
+                } else if (gameState == GameState.COMPLETE) {
+                    return;
+                }
+                numMoves++;
+                
                 switch (e.getCode()) {
                 case UP: moveUp(); break;
                 case DOWN: moveDown(); break;
@@ -91,9 +117,11 @@ public class FifteenPuzzle extends Application {
                 }
                 updateGridPane();
                 if (checkIfWin()) {
-                    long time = System.currentTimeMillis() - startMillis;
-                    timeLabel.setText("Last time: " + (int) (time) / 1000.0);
+                    gameState = GameState.COMPLETE;
                 }
+                long time = gameState == GameState.WAITING ? 0 : System.currentTimeMillis() - startMillis;
+                timeLabel.setText("Last time: " + (int) (time) / 1000.0);
+                movesLabel.setText("Moves: " + numMoves);
         });
 
         updateGridPane();
@@ -182,8 +210,16 @@ public class FifteenPuzzle extends Application {
         return true;
     }
 
+    private void startTimer() {
+        if (gameState == GameState.WAITING) {
+            startMillis = System.currentTimeMillis();
+            gameState = GameState.STARTED;
+        }
+    }
+
     private void resetGame() {
-        startMillis = System.currentTimeMillis();
+        gameState = GameState.WAITING;
+        numMoves = 0;
         
         // Creates a solved board
         for (int r = 0; r < 4; ++r) {
@@ -194,8 +230,14 @@ public class FifteenPuzzle extends Application {
         game[3][3] = 0;
 
         // Scrambles the board. Only 81 are necessary, but some "moves" don't do anything because they're at the wrong edge.
-        for (int i = 0; i < 500; ++i) {
+        int lastDir = 0;
+        for (int i = 0; i < 5000; ++i) {
             int rand = (int) (Math.random() * 4);
+            while (rand == lastDir) {
+                rand = (int) (Math.random() * 4);
+            }
+            lastDir = rand;
+        
             if (rand == 0) {
                 moveUp();
             } else if (rand == 1) {
@@ -208,4 +250,10 @@ public class FifteenPuzzle extends Application {
         }
     }
     
+}
+
+enum GameState {
+    WAITING,
+    STARTED,
+    COMPLETE
 }
