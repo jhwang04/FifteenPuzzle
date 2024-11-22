@@ -83,8 +83,6 @@ public class FifteenPuzzle extends Application {
         gridPane.setAlignment(Pos.CENTER);
         Rectangle background = new Rectangle(0, 0, 10000, 10000);
         background.setFill(PURPLE);
-        vbox.getChildren().add(startButton);
-        vbox.getChildren().add(gridPane);
 
         HBox labelBox = new HBox();
         labelBox.setAlignment(Pos.CENTER);
@@ -93,8 +91,11 @@ public class FifteenPuzzle extends Application {
         labelBox.getChildren().add(spacing);
         labelBox.getChildren().add(movesLabel);
         labelBox.setHgrow(spacing, Priority.ALWAYS);
-        
+
         vbox.getChildren().add(labelBox);
+        vbox.getChildren().add(gridPane);
+        vbox.getChildren().add(startButton);
+        
         vbox.setAlignment(Pos.CENTER);
         stackPane.getChildren().add(background);
         stackPane.getChildren().add(vbox);
