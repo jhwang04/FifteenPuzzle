@@ -8,7 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import src.GameRecorder;
+import src.GameController;
 import src.GameState;
 
 public class FifteenPuzzle extends Application {
@@ -16,17 +16,15 @@ public class FifteenPuzzle extends Application {
     final Color PURPLE = Color.rgb(106, 13, 173);
     final Color LIGHT_BLUE = Color.rgb(110, 220, 220);
 
-    int[][] game = new int[4][4];
     Rectangle[][] rectangles = new Rectangle[4][4];
     Label[][] labels = new Label[4][4];
-    long startMillis = 0;
     Label timeLabel = new Label("Last time:");
     Label movesLabel = new Label("Moves:");
     Button startButton = new Button("Reset");
-    GameState gameState = GameState.WAITING;
-    int numMoves = 0;
 
-    private GameRecorder gameRecorder = new GameRecorder();
+    GameController controller = new GameController();
+
+    int[][] game;
 
     public static void main(String[] args) {
         launch(args);
@@ -47,7 +45,7 @@ public class FifteenPuzzle extends Application {
         startButton.setFocusTraversable(false);
         startButton.setStyle("-fx-background-color: #6edcdc; -fx-border-color: ffffff; -fx-border-width: 3; -fx-background-radius: 10; -fx-border-radius: 10");
         startButton.setOnAction(e -> {
-            resetGame();
+            controller.resetGame();
             updateGridPane();
         });
         StackPane stackPane = new StackPane();
@@ -99,36 +97,17 @@ public class FifteenPuzzle extends Application {
         /* Add key handlers */
         Scene scene = new Scene(stackPane, 800, 800);
         scene.setOnKeyPressed(e -> {
-            if (gameState == GameState.WAITING) {
-                startTimer();
-            } else if (gameState == GameState.COMPLETE) {
+            if (controller.getGameState() == GameState.WAITING) {
+                controller.startTimer();
+            } else if (controller.getGameState() == GameState.COMPLETE) {
                 return;
             }
-            numMoves++;
 
-            switch (e.getCode()) {
-                case UP:
-                    moveUp();
-                    break;
-                case DOWN:
-                    moveDown();
-                    break;
-                case LEFT:
-                    moveLeft();
-                    break;
-                case RIGHT:
-                    moveRight();
-                    break;
-            }
-            gameRecorder.enterMove(e.getCode());
+            controller.enterKey(e.getCode());
+
             updateGridPane();
-            if (checkIfWin()) {
-                gameState = GameState.COMPLETE;
-                System.out.println(gameRecorder.getGameRecord(0.0));
-            }
-            long time = gameState == GameState.WAITING ? 0 : System.currentTimeMillis() - startMillis;
-            timeLabel.setText("Last time: " + (int) (time) / 1000.0);
-            movesLabel.setText("Moves: " + numMoves);
+            timeLabel.setText("Last time: " + (int) (controller.getLastTimeMillis()) / 1000.0);
+            movesLabel.setText("Moves: " + controller.getNumMoves());
         });
 
         updateGridPane();
@@ -154,111 +133,9 @@ public class FifteenPuzzle extends Application {
         }
     }
 
-    private void moveUp() {
-        for (int r = 0; r < 3; ++r) { // can't move up if the space is at bottom
-            for (int c = 0; c < 4; ++c) {
-                if (game[r][c] == 0) {
-                    int temp = game[r][c];
-                    game[r][c] = game[r + 1][c];
-                    game[r + 1][c] = temp;
-                    return;
-                }
-            }
-        }
-    }
-
-    private void moveDown() {
-        for (int r = 1; r < 4; ++r) { // can't move down if the space is at top
-            for (int c = 0; c < 4; ++c) {
-                if (game[r][c] == 0) {
-                    int temp = game[r][c];
-                    game[r][c] = game[r - 1][c];
-                    game[r - 1][c] = temp;
-                    return;
-                }
-            }
-        }
-    }
-
-    private void moveRight() {
-        for (int r = 0; r < 4; ++r) { // can't move right if the space is at left
-            for (int c = 1; c < 4; ++c) {
-                if (game[r][c] == 0) {
-                    int temp = game[r][c];
-                    game[r][c] = game[r][c - 1];
-                    game[r][c - 1] = temp;
-                    return;
-                }
-            }
-        }
-    }
-
-    private void moveLeft() {
-        for (int r = 0; r < 4; ++r) { // can't move left if space is at right
-            for (int c = 0; c < 3; ++c) {
-                if (game[r][c] == 0) {
-                    int temp = game[r][c];
-                    game[r][c] = game[r][c + 1];
-                    game[r][c + 1] = temp;
-                    return;
-                }
-            }
-        }
-    }
-
-    private boolean checkIfWin() {
-        for (int r = 0; r < 4; ++r) {
-            for (int c = 0; c < 4; ++c) {
-                if (game[r][c] != 4 * r + c + 1 && !(r == 3 && c == 3)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private void startTimer() {
-        if (gameState == GameState.WAITING) {
-            startMillis = System.currentTimeMillis();
-            gameState = GameState.STARTED;
-        }
-    }
-
     private void resetGame() {
-        gameState = GameState.WAITING;
-        numMoves = 0;
-
-        // Creates a solved board
-        for (int r = 0; r < 4; ++r) {
-            for (int c = 0; c < 4; ++c) {
-                game[r][c] = r * 4 + c + 1;
-            }
-        }
-        game[3][3] = 0;
-
-        // Scrambles the board. Only 81 are necessary, but some "moves" don't do anything because they're at the wrong edge.
-        int lastDir = 0;
-        for (int i = 0; i < 5000; ++i) {
-            int rand = (int) (Math.random() * 4);
-            while (rand == lastDir) {
-                rand = (int) (Math.random() * 4);
-            }
-            lastDir = rand;
-
-            if (rand == 0) {
-                moveUp();
-            } else if (rand == 1) {
-                moveDown();
-            } else if (rand == 2) {
-                moveRight();
-            } else {
-                moveLeft();
-            }
-        }
-
-        // Start new game recorder
-        gameRecorder.newGame(game);
+        controller.resetGame();
+        game = controller.getGame();
     }
-
 }
 
