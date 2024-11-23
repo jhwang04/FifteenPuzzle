@@ -16,6 +16,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Button;
 import javafx.scene.Scene;
 import javafx.scene.shape.Rectangle;
+import src.GameRecorder;
+import src.GameState;
+
+import java.util.Arrays;
 
 public class FifteenPuzzle extends Application {
 
@@ -31,6 +35,8 @@ public class FifteenPuzzle extends Application {
     Button startButton = new Button("Reset");
     GameState gameState = GameState.WAITING;
     int numMoves = 0;
+
+    private GameRecorder gameRecorder = new GameRecorder();
 
     public static void main(String[] args) {
         launch(args);
@@ -51,9 +57,9 @@ public class FifteenPuzzle extends Application {
         startButton.setFocusTraversable(false);
         startButton.setStyle("-fx-background-color: #6edcdc; -fx-border-color: ffffff; -fx-border-width: 3; -fx-background-radius: 10; -fx-border-radius: 10");
         startButton.setOnAction(e -> {
-                resetGame();
-                updateGridPane();
-            });
+            resetGame();
+            updateGridPane();
+        });
         StackPane stackPane = new StackPane();
         VBox vbox = new VBox();
         GridPane gridPane = new GridPane();
@@ -67,7 +73,7 @@ public class FifteenPuzzle extends Application {
                 rectangle.setArcHeight(10.0);
                 rectangle.setArcWidth(10.0);
                 rectangles[r][c] = rectangle;
-                
+
                 Label label = new Label("" + game[r][c]);
                 label.setTextFill(Color.WHITE);
                 label.setFont(new Font("Comic Sans MS", 30));
@@ -95,7 +101,7 @@ public class FifteenPuzzle extends Application {
         vbox.getChildren().add(labelBox);
         vbox.getChildren().add(gridPane);
         vbox.getChildren().add(startButton);
-        
+
         vbox.setAlignment(Pos.CENTER);
         stackPane.getChildren().add(background);
         stackPane.getChildren().add(vbox);
@@ -103,33 +109,43 @@ public class FifteenPuzzle extends Application {
         /* Add key handlers */
         Scene scene = new Scene(stackPane, 800, 800);
         scene.setOnKeyPressed(e -> {
-                if (gameState == GameState.WAITING) {
-                    startTimer();
-                } else if (gameState == GameState.COMPLETE) {
-                    return;
-                }
-                numMoves++;
-                
-                switch (e.getCode()) {
-                case UP: moveUp(); break;
-                case DOWN: moveDown(); break;
-                case LEFT: moveLeft(); break;
-                case RIGHT: moveRight(); break;
-                }
-                updateGridPane();
-                if (checkIfWin()) {
-                    gameState = GameState.COMPLETE;
-                }
-                long time = gameState == GameState.WAITING ? 0 : System.currentTimeMillis() - startMillis;
-                timeLabel.setText("Last time: " + (int) (time) / 1000.0);
-                movesLabel.setText("Moves: " + numMoves);
+            if (gameState == GameState.WAITING) {
+                startTimer();
+            } else if (gameState == GameState.COMPLETE) {
+                return;
+            }
+            numMoves++;
+
+            switch (e.getCode()) {
+                case UP:
+                    moveUp();
+                    break;
+                case DOWN:
+                    moveDown();
+                    break;
+                case LEFT:
+                    moveLeft();
+                    break;
+                case RIGHT:
+                    moveRight();
+                    break;
+            }
+            gameRecorder.enterMove(e.getCode());
+            updateGridPane();
+            if (checkIfWin()) {
+                gameState = GameState.COMPLETE;
+                System.out.println(gameRecorder.getGameRecord(0.0));
+            }
+            long time = gameState == GameState.WAITING ? 0 : System.currentTimeMillis() - startMillis;
+            timeLabel.setText("Last time: " + (int) (time) / 1000.0);
+            movesLabel.setText("Moves: " + numMoves);
         });
 
         updateGridPane();
 
         primaryStage.setScene(scene);
         primaryStage.show();
-        
+
     }
 
     private void updateGridPane() {
@@ -221,7 +237,7 @@ public class FifteenPuzzle extends Application {
     private void resetGame() {
         gameState = GameState.WAITING;
         numMoves = 0;
-        
+
         // Creates a solved board
         for (int r = 0; r < 4; ++r) {
             for (int c = 0; c < 4; ++c) {
@@ -238,7 +254,7 @@ public class FifteenPuzzle extends Application {
                 rand = (int) (Math.random() * 4);
             }
             lastDir = rand;
-        
+
             if (rand == 0) {
                 moveUp();
             } else if (rand == 1) {
@@ -249,12 +265,10 @@ public class FifteenPuzzle extends Application {
                 moveLeft();
             }
         }
+
+        // Start new game recorder
+        gameRecorder.newGame(game);
     }
-    
+
 }
 
-enum GameState {
-    WAITING,
-    STARTED,
-    COMPLETE
-}
