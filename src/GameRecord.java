@@ -4,40 +4,34 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class GameRecord {
-    private ArrayList<Input> inputs;
-    private double duration;
+    private Input[] inputs;
+    private long duration;
     int[][] initialBoard;
 
-    public GameRecord(ArrayList<Input> inputs, double duration, int[][] initialBoard) {
-        this.inputs = inputs;
+    /**
+     * Create new game record instance
+     * @param inputs inputs to the game
+     * @param duration number of milliseconds the game lasted
+     * @param initialBoard initial configuration of board
+     */
+    public GameRecord(ArrayList<Input> inputs, long duration, int[][] initialBoard) {
+        this.inputs = inputs.toArray(new Input[inputs.size()]);
         this.duration = duration;
         this.initialBoard = initialBoard;
     }
 
-    public ArrayList<Input> getInputs() {
+    public Input[] getInputs() {
         return inputs;
-    }
-
-    public void setInputs(ArrayList<Input> inputs) {
-        this.inputs = inputs;
     }
 
     public double getDuration() {
         return duration;
     }
 
-    public void setInitialBoard(int[][] initialBoard) {
-        this.initialBoard = initialBoard;
-    }
-
-    public void setDuration(double duration) {
-        this.duration = duration;
-    }
-
     @Override
     public String toString() {
         return "GameRecord{" +
-                "inputs=" + inputs +
+                "inputs=" + Arrays.toString(inputs) +
                 ", duration=" + duration +
                 ", initialBoard=" + Arrays.deepToString(initialBoard) +
                 '}';

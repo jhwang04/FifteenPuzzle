@@ -2,6 +2,8 @@ package src;
 
 import javafx.scene.input.KeyCode;
 
+import java.util.ArrayList;
+
 public class GameController {
     private GameState gameState = GameState.WAITING;
     private int[][] game = new int[4][4];
@@ -10,6 +12,8 @@ public class GameController {
     private long lastTimeMillis = 0;
 
     private GameRecorder gameRecorder = new GameRecorder();
+
+    private ArrayList<GameRecord> gameRecords = new ArrayList<>();
 
     public void resetGame() {
         gameState = GameState.WAITING;
@@ -81,14 +85,14 @@ public class GameController {
                 break;
         }
 
-        if (checkIfWin()) {
-            gameState = GameState.COMPLETE;
-            System.out.println(gameRecorder.getGameRecord(0.0));
-        }
-
         lastTimeMillis = gameState == GameState.WAITING ? 0 : System.currentTimeMillis() - startMillis;
         gameRecorder.enterMove(key);
         numMoves++;
+
+        if (checkIfWin()) {
+            gameState = GameState.COMPLETE;
+            gameRecords.add(gameRecorder.getGameRecord(lastTimeMillis));
+        }
     }
 
     public int[][] getGame() {
@@ -101,6 +105,10 @@ public class GameController {
 
     public GameState getGameState() {
         return gameState;
+    }
+
+    public ArrayList<GameRecord> getGameRecords() {
+        return gameRecords;
     }
 
     public long getLastTimeMillis() {

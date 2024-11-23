@@ -63,7 +63,7 @@ public class GameRecorder {
         }
     }
 
-    public GameRecord getGameRecord(double duration) {
+    public GameRecord getGameRecord(long duration) {
         return new GameRecord(currentGame, duration, initialBoard);
     }
 }
