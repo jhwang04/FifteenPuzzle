@@ -28,6 +28,10 @@ public class GameRecord {
         return duration;
     }
 
+    public int getNumInputs() {
+        return inputs.length;
+    }
+
     @Override
     public String toString() {
         return "GameRecord{" +
