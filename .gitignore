@@ -1,2 +1,9 @@
 *.class
 *~
+
+# Compiled game files
+out/
+FifteenPuzzle.iml
+
+# IntelliJ files
+.idea/
