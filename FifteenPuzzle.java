@@ -4,6 +4,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -113,8 +114,13 @@ public class FifteenPuzzle extends Application {
         root.setCenter(gameView);
 
         VBox historyView = new VBox();
+        ScrollPane historyScrollPane = new ScrollPane();
         historyView.setPadding(new Insets(10, 10, 10, 10));
-        historyView.getChildren().addAll(historyButton, historyList);
+        historyScrollPane.setFitToHeight(true);
+        historyScrollPane.setFitToWidth(true);
+        historyScrollPane.setContent(historyList);
+        historyScrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+        historyView.getChildren().addAll(historyButton, historyScrollPane);
 
         root.setRight(historyView);
 
